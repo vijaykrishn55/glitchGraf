@@ -1,35 +1,79 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import { Toaster } from 'react-hot-toast';
+import { useAuth } from './contexts/AuthContext';
+import HomePage from './pages/HomePage';
+import ARView from './pages/ARView';
+import ProfilePage from './pages/ProfilePage';
+import InstallButton from './components/InstallButton';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [page, setPage] = useState('home');
+  const [currentLandmark, setCurrentLandmark] = useState(null);
+  const { currentUser } = useAuth();
+
+  // Navigation handlers
+  const goToAR = (landmarkId) => {
+    setCurrentLandmark(landmarkId);
+    setPage('ar');
+  };
+
+  const goToProfile = () => setPage('profile');
+  const goHome = () => setPage('home');
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+    <div className="min-h-screen bg-gray-100">
+      <Toaster position="top-right" />
+      <InstallButton />
+      
+      {/* Navigation Bar */}
+      <nav className="bg-purple-600 text-white p-4 flex justify-between items-center">
+        <button 
+          onClick={goHome} 
+          className="text-xl font-bold"
+        >
+          Reality Remix
         </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+        
+        <div className="flex items-center space-x-4">
+          {currentUser && !currentUser.isAnonymous && (
+            <span className="text-sm">
+              {currentUser.email || currentUser.displayName}
+            </span>
+          )}
+          <button 
+            onClick={goToProfile}
+            className="bg-white text-purple-600 px-4 py-1 rounded-full text-sm"
+          >
+            Profile
+          </button>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="p-0">
+        {page === 'home' && (
+          <HomePage onLandmarkSelect={goToAR} />
+        )}
+        
+        {page === 'ar' && currentLandmark && (
+          <ARView 
+            landmarkId={currentLandmark} 
+            onBack={goHome}
+          />
+        )}
+        
+        {page === 'profile' && (
+          <ProfilePage onBack={goHome} />
+        )}
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-gray-800 text-white p-4 text-center text-sm">
+        © {new Date().getFullYear()} Reality Remix - AR Glitch Collective
+      </footer>
+    </div>
+  );
 }
 
-export default App
+export default App;
